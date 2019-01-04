@@ -1,0 +1,751 @@
+SQL> create table Customers (
+  2  Customer_ID_Key number(10) not null primary key,
+  3  First_Name nvarchar2(20) not null,
+  4  Last_Name nvarchar2(20) not null,
+  5  Street_Address nvarchar2(40) not null,
+  6  City nvarchar2(20) not null,
+  7  State nvarchar2(2) not null,
+  8  Zip nvarchar2(10) not null,
+  9  Phone_Number varchar2(15) not null,
+ 10  E_mail nvarchar2(40) not null
+ 11  );
+
+Table created.
+
+SQL> 
+SQL> create table Distributors (
+  2  Dist_Name_Key nvarchar2(15) not null primary key,
+  3  Phone_Number varchar2(15) not null,
+  4  E_mail nvarchar2(40) not null,
+  5  Quant_Discount_Offer number(4,2) DEFAULT .00 not null,
+  6  Repeat_Discount_Offer number(4,2) DEFAULT .00 not null
+  7  );
+
+Table created.
+
+SQL> 
+SQL> create table Movies (
+  2  Movie_ID_Key nvarchar2(10) not null primary key,
+  3  Name nvarchar2(40) not null,
+  4  Genre nvarchar2(20) not null,
+  5  Date_Released date not null,
+  6  Rating number(2,1) not null,
+  7  constraint chk_rating check(Rating>0 and Rating<=5),
+  8  Length nvarchar2(6) not null
+  9  );
+
+Table created.
+
+SQL> 
+SQL> create table Purchases (
+  2  Purchase_ID_Key number(10) not null primary key,
+  3  Dist_Name nvarchar2(15) not null,
+  4  constraint FK_Dist_Name foreign key (Dist_Name) references Distributors(Dist_Name_Key),
+  5  Base_Cost number(10,2) not null,
+  6  Quant_Disc_Applied number(10,2) DEFAULT .00 not null,
+  7  Return_Disc_Applied number(10,2) DEFAULT .00 not null,
+  8  constraint chk_discounts check(Quant_Disc_Applied>=0 and Quant_Disc_Applied<=1 and Return_Disc_Applied>=0 and Return_Disc_Applied<=1),
+  9  Taxes number(10,2) not null,
+ 10  Final_Purch_Cost number(10,2) not null
+ 11  );
+
+Table created.
+
+SQL> 
+SQL> create table Movie_Copies (
+  2  Copy_ID_Key nvarchar2(10) not null primary key,
+  3  Movie_ID nvarchar2(10) not null,
+  4  constraint FK_Movie_ID foreign key (Movie_ID) references Movies(Movie_ID_Key),
+  5  Purchase_ID number(10) not null,
+  6  constraint FK_Purchase_ID foreign key (Purchase_ID) references Purchases(Purchase_ID_Key),
+  7  Dist_Serial_Num nvarchar2(20) not null,
+  8  Movie_Format nvarchar2(5) not null,
+  9  constraint chk_format check(Movie_Format='DVD' or Movie_Format='VHS'),
+ 10  Rental_Cost number(4, 2) not null
+ 11  );
+
+Table created.
+
+SQL> 
+SQL> create table Rentals (
+  2  Rental_ID_Key number(10) not null primary key,
+  3  Cust_ID number(10) not null,
+  4  constraint FK_Cust_ID foreign key (Cust_ID) references Customers(Customer_ID_Key),
+  5  Copy_ID nvarchar2(10) not null,
+  6  constraint FK_Copy_ID foreign key (Copy_ID) references Movie_Copies(Copy_ID_Key),
+  7  Rental_Date date not null,
+  8  Due_Date date not null,
+  9  Date_Returned date,
+ 10  Overdue_T_F nvarchar2(1) not null,
+ 11  Rental_Fee number(4,2) not null,
+ 12  Late_Fee number(5,2) DEFAULT .00 not null,
+ 13  Damage_Fee number(5,2) DEFAULT .00 not null,
+ 14  Fail_To_RWD_Fee number(4,2) DEFAULT .00 not null,
+ 15  Other_Fees number (5,2) DEFAULT .00 not null,
+ 16  Taxes number(4,2) not null,
+ 17  Disc_Applied number(2,2) DEFAULT 0.0 not null,
+ 18  Total_Cost number(5,2) not null,
+ 19  Amt_Paid number(5,2) DEFAULT .00 not null,
+ 20  Amt_Due number(5,2) DEFAULT .00 not null
+ 21  );
+
+Table created.
+
+SQL> 
+SQL> create table Academy_Awards (
+  2  Award_ID_Key number(10) not null primary key,
+  3  Movie_ID nvarchar2(10) not null,
+  4  constraint FK_Movie_ID_AA foreign key (Movie_ID) references Movies(Movie_ID_Key),
+  5  Award_Name nvarchar2(100) not null
+  6  );
+
+Table created.
+
+SQL> 
+SQL> create table Acting_Roles (
+  2  Role_ID_Key number(10) not null primary key,
+  3  Movie_ID nvarchar2(10) not null,
+  4  constraint FK_Movie_ID_AR foreign key (Movie_ID) references Movies(Movie_ID_Key),
+  5  Actor_Name nvarchar2(20) not null,
+  6  Character_Name nvarchar2(20) not null,
+  7  Role_Award_ID number(10) default null,
+  8  constraint FK_Role_Award_ID foreign key (Role_Award_ID) references Academy_Awards(Award_ID_Key)
+  9  );
+
+Table created.
+
+SQL> 
+SQL> create table Directing_Roles (
+  2  Role_ID_Key number(10) not null primary key,
+  3  Movie_ID nvarchar2(10) not null,
+  4  Constraint FK_Movie_ID_DR foreign key (Movie_ID) references Movies(Movie_ID_Key),
+  5  Director_Name nvarchar2(20) not null,
+  6  Role_Award_ID number(10) default null,
+  7  constraint FK_Role_Award_ID_Dir foreign key (Role_Award_ID) references Academy_Awards(Award_ID_Key)
+  8  );
+
+Table created.
+
+SQL> 
+SQL> create table Catalogs (
+  2  Catalog_ID_Key number(10) not null primary key,
+  3  Dist_Name nvarchar2(15) not null,
+  4  constraint FK_Dist_Name_Catalog foreign key (Dist_Name) references Distributors(Dist_Name_Key),
+  5  Issue_Date date not null
+  6  );
+
+Table created.
+
+SQL> 
+SQL> create table Catalog_Items (
+  2  Item_ID_Key nvarchar2(10) not null primary key,
+  3  Catalog_Key number(10) not null,
+  4  constraint FK_Catalog_Key foreign key (Catalog_Key) references Catalogs(Catalog_ID_Key),
+  5  Item_Name nvarchar2(40) not null,
+  6  Item_Format nvarchar2(5) not null,
+  7  constraint chk_format2 check(Item_Format='DVD' or Item_Format='VHS'),
+  8  Item_Cost number(5,2) not null
+  9  );
+
+Table created.
+
+SQL> 
+SQL> create table Items_Purchased (
+  2  Item_Purch_ID_Key number(10) not null primary key,
+  3  Item_ID nvarchar2(10) not null,
+  4  constraint FK_Item_ID foreign key (Item_ID) references Catalog_Items(Item_ID_Key),
+  5  Purch_ID number(10) not null,
+  6  constraint FK_Purch_ID foreign key (Purch_ID) references Purchases(Purchase_ID_Key)
+  7  );
+
+Table created.
+
+SQL> 
+SQL> REM ***SEQUENCES AND TRIGGERS
+SQL> create sequence Customers_PK start with 1 increment by 1 nomaxvalue;
+
+Sequence created.
+
+SQL> create sequence Purchases_PK start with 1 increment by 1 nomaxvalue;
+
+Sequence created.
+
+SQL> create sequence Rentals_PK start with 1 increment by 1 nomaxvalue;
+
+Sequence created.
+
+SQL> create sequence Academy_Awards_PK start with 1 increment by 1 nomaxvalue;
+
+Sequence created.
+
+SQL> create sequence Acting_Roles_PK start with 1 increment by 1 nomaxvalue;
+
+Sequence created.
+
+SQL> create sequence Directing_Roles_PK start with 1 increment by 1 nomaxvalue;
+
+Sequence created.
+
+SQL> create sequence Catalogs_PK start with 1 increment by 1 nomaxvalue;
+
+Sequence created.
+
+SQL> create sequence Items_Purchased_PK start with 1 increment by 1 nomaxvalue;
+
+Sequence created.
+
+SQL> 
+SQL> create trigger customer_id_increase
+  2  before insert on Customers
+  3  for each row
+  4  begin
+  5  select Customers_PK.nextval into :new.Customer_ID_Key from dual;
+  6  end;
+  7  /
+
+Trigger created.
+
+SQL> 
+SQL> 
+SQL> create trigger purchase_id_increase
+  2  before insert on Purchases
+  3  for each row
+  4  begin
+  5  select Purchases_PK.nextval into :new.Purchase_ID_Key from dual;
+  6  end;
+  7  /
+
+Trigger created.
+
+SQL> 
+SQL> create trigger rental_id_increase
+  2  before insert on Rentals
+  3  for each row
+  4  begin
+  5  select Rentals_PK.nextval into :new.Rental_ID_Key from dual;
+  6  end;
+  7  /
+
+Trigger created.
+
+SQL> 
+SQL> create trigger academy_awards_id_increase
+  2  before insert on Academy_Awards
+  3  for each row
+  4  begin
+  5  select Academy_Awards_PK.nextval into :new.Award_ID_Key from dual;
+  6  end;
+  7  /
+
+Trigger created.
+
+SQL> 
+SQL> create trigger acting_roles_id_increase
+  2  before insert on Acting_Roles
+  3  for each row
+  4  begin
+  5  select Acting_Roles_PK.nextval into :new.Role_ID_Key from dual;
+  6  end;
+  7  /
+
+Trigger created.
+
+SQL> 
+SQL> create trigger directing_roles_id_increase
+  2  before insert on Directing_Roles
+  3  for each row
+  4  begin
+  5  select Directing_Roles_PK.nextval into :new.Role_ID_Key from dual;
+  6  end;
+  7  /
+
+Trigger created.
+
+SQL> 
+SQL> create trigger catalog_id_increase
+  2  before insert on Catalogs
+  3  for each row
+  4  begin
+  5  select Catalogs_PK.nextval into :new.Catalog_ID_Key from dual;
+  6  end;
+  7  /
+
+Trigger created.
+
+SQL> 
+SQL> create trigger items_purchased_id_increase
+  2  before insert on Items_Purchased
+  3  for each row
+  4  begin
+  5  select Items_Purchased_PK.nextval into :new.Item_Purch_ID_Key from dual;
+  6  end;
+  7  /
+
+Trigger created.
+
+SQL> 
+SQL> REM ***POPULATE TABLES
+SQL> insert into Customers(First_Name, Last_Name, Street_Address, City, State, Zip, Phone_Number, E_mail) values ('George', 'Wilson', '115 Seabridge St', 'Knoxville', 'TN', '34780', '865-482-9541', 'mrwilson@gmail.com');
+
+1 row created.
+
+SQL> insert into Customers(First_Name, Last_Name, Street_Address, City, State, Zip, Phone_Number, E_mail) values ('Sebastian', 'Perez', '101 Feldspar Ln', 'Atlanta', 'GA', '42598', '970-421-0884', 'sebbyboy@yahoo.com');
+
+1 row created.
+
+SQL> insert into Customers(First_Name, Last_Name, Street_Address, City, State, Zip, Phone_Number, E_mail) values ('Candy', 'Apple', '14 Peppermint Way', 'Candyland', 'CA', '54321', '654-395-4827', 'sweetaspie4298@candy.com');
+
+1 row created.
+
+SQL> insert into Customers(First_Name, Last_Name, Street_Address, City, State, Zip, Phone_Number, E_mail) values ('Chloe', 'Sauvignon', '73 Kittycat Ct', 'Cat City', 'NY', '13942', '345-425-3425', 'chloethecat@chloecat.com');
+
+1 row created.
+
+SQL> insert into Customers(First_Name, Last_Name, Street_Address, City, State, Zip, Phone_Number, E_mail) values ('Pee', 'Sherman', '42 Wallaby Way', 'Sydney', 'AU', '94857', '859-385-9375', 'findingnemo@disney.com');
+
+1 row created.
+
+SQL> 
+SQL> insert into Distributors values ('Buena Vista', '345-324-6542', 'sales@buenavista.com', .25, .04);
+
+1 row created.
+
+SQL> insert into Distributors values ('Blockbuster', '543-345-8693', 'movies@blockbuster.com', .00, .00);
+
+1 row created.
+
+SQL> insert into Distributors values ('Antidot Films', '349-583-9375', 'antidot_admin@antidot.com', .00, .42);
+
+1 row created.
+
+SQL> insert into Distributors values ('Paramount', '800-453-6839', 'director@paramount.com', .12, .03);
+
+1 row created.
+
+SQL> insert into Distributors values ('Lionsgate', '800-927-5839', 'distribution@lionsgate.com', .32, .00);
+
+1 row created.
+
+SQL> insert into Distributors values ('Luxe', '888-274-7193', 'sales@luxe.com', .30, .16);
+
+1 row created.
+
+SQL> 
+SQL> insert into Movies values('85739', 'The Courageous', 'Action', to_date('13/05/2001', 'DD/MM/YYYY'), 4.5, '01:47');
+
+1 row created.
+
+SQL> insert into Movies values('29472', 'Constantine In The Jungle', 'Drama', to_date('04/08/2010', 'DD/MM/YYYY'), 3, '2:06');
+
+1 row created.
+
+SQL> insert into Movies values('89237', 'Never Forget Me', 'Romance', to_date('14/06/1977', 'DD/MM/YYYY'), 5, '1:54');
+
+1 row created.
+
+SQL> insert into Movies values('92374', 'Never Give Up', 'Drama', to_date('28/02/1999', 'DD/MM/YYYY'), 4.1, '2:40');
+
+1 row created.
+
+SQL> insert into Movies values('27481', 'What Am I Doing With You', 'Documentary', to_date('02/07/2016', 'DD/MM/YYYY'), 3.5, '2:13');
+
+1 row created.
+
+SQL> 
+SQL> insert into Purchases(Dist_Name, Base_Cost, Quant_Disc_Applied, Return_Disc_Applied, Taxes, Final_Purch_Cost) values ('Luxe', 10000.00, .3, .16, .08*10000, (10000-(.3*10000)-(.16*10000)+(.08*10000)));
+
+1 row created.
+
+SQL> insert into Purchases(Dist_Name, Base_Cost, Taxes, Final_Purch_Cost) values ('Blockbuster', 2712.92, (2712.92*.08), 2712.92*1.08);
+
+1 row created.
+
+SQL> insert into Purchases(Dist_Name, Base_Cost, Return_Disc_Applied, Taxes, Final_Purch_Cost) values ('Antidot Films', 435.62, .42, 435.62*.08, (435.62*1.08)-(435.62*.42));
+
+1 row created.
+
+SQL> insert into Purchases(Dist_Name, Base_Cost, Quant_Disc_Applied, Taxes, Final_Purch_Cost) values ('Lionsgate', 5872.00, .32, 5872.00*.08, (5872.00*1.08)-(5872.00*.32));
+
+1 row created.
+
+SQL> insert into Purchases(Dist_Name, Base_Cost, Quant_Disc_Applied, Return_Disc_Applied, Taxes, Final_Purch_Cost) values ('Buena Vista', 723.98, (select Quant_Discount_Offer from Distributors where Dist_Name_Key='Buena Vista'), (select Repeat_Discount_Offer from Distributors where Dist_Name_Key='Buena Vista'), 723.98*.08, (723.98*1.08)-(723.98*(select Quant_Discount_Offer from Distributors where Dist_Name_Key='Buena Vista'))-(723.98*(select Repeat_Discount_Offer from Distributors where Dist_Name_Key='Buena Vista')));
+
+1 row created.
+
+SQL> 
+SQL> 
+SQL> 
+SQL> 
+SQL> insert into Movie_Copies values('39846', '85739', 1, '65tygh6e2', 'DVD', 7.00);
+
+1 row created.
+
+SQL> insert into Movie_Copies values('23984', '89237', 1, '4567yuh07', 'DVD', 4.95);
+
+1 row created.
+
+SQL> insert into Movie_Copies values('23908', '92374', 1, '5hn84rft6', 'VHS', 2.50);
+
+1 row created.
+
+SQL> insert into Movie_Copies values('09137', '29472', 5, '76tuyerdf', 'DVD', 6.99);
+
+1 row created.
+
+SQL> insert into Movie_Copies values('23857', '29472', 4, '32urkog83', 'VHS', 2.25);
+
+1 row created.
+
+SQL> 
+SQL> insert into Rentals(Cust_ID, Copy_ID, Rental_Date, Due_Date, Date_Returned, Overdue_T_F, Rental_Fee, Other_Fees, Taxes, Disc_Applied, Total_Cost, Amt_Paid, Amt_Due) values (1, '39846', to_date('22/06/2016', 'DD/MM/YYYY'), to_date('25/06/2016', 'DD/MM/YYYY'), to_date('25/06/2016', 'DD/MM/YYYY'), 'F', 7.00, 1.14, .08*7, 1.50/7, (7*1.08) + 1.14 - 1.5, 7.10,(7*1.08) + 1.14 - 1.5 - 7.1);
+
+1 row created.
+
+SQL> insert into Rentals(Cust_ID, Copy_ID, Rental_Date, Due_Date, Date_Returned, Overdue_T_F, Rental_Fee, Taxes, Disc_Applied, Total_Cost, Amt_Paid, Amt_Due) values (1, '23908', to_date('22/06/2016', 'DD/MM/YYYY'), to_date('25/06/2016', 'DD/MM/YYYY'), to_date('25/06/2016', 'DD/MM/YYYY'), 'F', 2.50, 2.50*.08, .01, (2.50*1.08)-(2.50*.01), (2.50*1.08)-(2.50*.01), 0);
+
+1 row created.
+
+SQL> insert into Rentals(Cust_ID, Copy_ID, Rental_Date, Due_Date, Date_Returned, Overdue_T_F, Rental_Fee, Late_Fee, Taxes, Total_Cost, Amt_Paid, Amt_Due) values (3, '09137', to_date('18/04/2018', 'DD/MM/YYYY'), to_date('22/04/2018', 'DD/MM/YYYY'), to_date('27/04/2018', 'DD/MM/YYYY'), 'T', 6.99, 5*1.5, 6.99*.08, (6.99*1.08) + (5*1.5), 6.99*1.08, 5*1.5);
+
+1 row created.
+
+SQL> insert into Rentals(Cust_ID, Copy_ID, Rental_Date, Due_Date, Date_Returned, Overdue_T_F, Rental_Fee, Fail_To_RWD_Fee, Taxes, Total_Cost, Amt_Due) values (2, '23908', to_date('03/12/2016', 'DD/MM/YYYY'), to_date('06/12/2016', 'DD/MM/YYYY'), to_date('04/12/2016', 'DD/MM/YYYY'), 'F', 2.50, .50, 2.50*.08, (2.50*1.08)+.5, (2.50*1.08)+.5);
+
+1 row created.
+
+SQL> insert into Rentals(Cust_ID, Copy_ID, Rental_Date, Due_Date, Date_Returned, Overdue_T_F, Rental_Fee, Damage_Fee, Taxes, Total_Cost, Amt_Paid, Amt_Due) values (4, '23857', to_date('03/04/2018', 'DD/MM/YYYY'), to_date('06/04/2018', 'DD/MM/YYYY'), to_date('04/04/2018', 'DD/MM/YYYY'), 'F', 2.25, 5.00, 2.25*.08, (2.25*.08)+5, (2.25*.08), 5);
+
+1 row created.
+
+SQL> 
+SQL> insert into Academy_Awards(Movie_ID, Award_Name) values('27481', 'Best Supporting Actress');
+
+1 row created.
+
+SQL> insert into Academy_Awards(Movie_ID, Award_Name) values('27481', 'Best Picture');
+
+1 row created.
+
+SQL> insert into Academy_Awards(Movie_ID, Award_Name) values('89237', 'Best Director');
+
+1 row created.
+
+SQL> insert into Academy_Awards(Movie_ID, Award_Name) values('92374', 'Best Director');
+
+1 row created.
+
+SQL> insert into Academy_Awards(Movie_ID, Award_Name) values('85739', 'Best Lead');
+
+1 row created.
+
+SQL> 
+SQL> insert into Acting_Roles(Movie_ID, Actor_Name, Character_Name, Role_Award_ID) values ('27481', 'Anna Germaine', 'Sunny Golucky', 1);
+
+1 row created.
+
+SQL> insert into Acting_Roles(Movie_ID, Actor_Name, Character_Name, Role_Award_ID) values ('85739', 'Cassidy French', 'Chanel DuMonte', 5);
+
+1 row created.
+
+SQL> insert into Acting_Roles(Movie_ID, Actor_Name, Character_Name) values ('92374', 'Jordan Williamson', 'Michael Scraff');
+
+1 row created.
+
+SQL> insert into Acting_Roles(Movie_ID, Actor_Name, Character_Name) values ('89237', 'Marcus Smith', 'Carmichael Kennedy');
+
+1 row created.
+
+SQL> insert into Acting_Roles(Movie_ID, Actor_Name, Character_Name) values ('29472', 'Samantha Munn', 'Declarisa Carmen');
+
+1 row created.
+
+SQL> 
+SQL> insert into Directing_Roles(Movie_ID, Director_Name, Role_Award_ID) values('89237', 'Cameron Collins', 3);
+
+1 row created.
+
+SQL> insert into Directing_Roles(Movie_ID, Director_Name, Role_Award_ID) values('92374', 'Kelly Lynch', 4);
+
+1 row created.
+
+SQL> insert into Directing_Roles(Movie_ID, Director_Name) values('29472', 'Cardinal Smith');
+
+1 row created.
+
+SQL> insert into Directing_Roles(Movie_ID, Director_Name) values('27481', 'Kelsey Aiello');
+
+1 row created.
+
+SQL> insert into Directing_Roles(Movie_ID, Director_Name) values('27481', 'Fred Dink');
+
+1 row created.
+
+SQL> 
+SQL> insert into Catalogs(Dist_Name, Issue_Date) values('Lionsgate', to_date('15/10/2016', 'DD/MM/YYYY'));
+
+1 row created.
+
+SQL> insert into Catalogs(Dist_Name, Issue_Date) values('Lionsgate', to_date('15/11/2016', 'DD/MM/YYYY'));
+
+1 row created.
+
+SQL> insert into Catalogs(Dist_Name, Issue_Date) values('Lionsgate', to_date('15/12/2016', 'DD/MM/YYYY'));
+
+1 row created.
+
+SQL> insert into Catalogs(Dist_Name, Issue_Date) values('Luxe', to_date('01/04/2017', 'DD/MM/YYYY'));
+
+1 row created.
+
+SQL> insert into Catalogs(Dist_Name, Issue_Date) values('Antidot Films', to_date('01/07/2017', 'DD/MM/YYYY'));
+
+1 row created.
+
+SQL> 
+SQL> insert into Catalog_Items values('87eygh9r', 3, 'Gone With The Wind', 'DVD', 13.42);
+
+1 row created.
+
+SQL> insert into Catalog_Items values('78345jk', 2, 'Why Not?', 'DVD', 10.99);
+
+1 row created.
+
+SQL> insert into Catalog_Items values('ijoi935', 4, translate('Hot Child # the City', '#', '&'), 'VHS', 7.14);
+
+1 row created.
+
+SQL> insert into Catalog_Items values('uth90gd', 2, 'McEntire Express', 'DVD', 19.99);
+
+1 row created.
+
+SQL> insert into Catalog_Items values('89dvjhoo9', 3, 'El Gordo', 'DVD', 12.00);
+
+1 row created.
+
+SQL> 
+SQL> insert into Items_Purchased(Item_ID, Purch_ID) values('87eygh9r', 4);
+
+1 row created.
+
+SQL> insert into Items_Purchased(Item_ID, Purch_ID) values('78345jk', 4);
+
+1 row created.
+
+SQL> insert into Items_Purchased(Item_ID, Purch_ID) values('ijoi935', 1);
+
+1 row created.
+
+SQL> insert into Items_Purchased(Item_ID, Purch_ID) values('uth90gd', 4);
+
+1 row created.
+
+SQL> insert into Items_Purchased(Item_ID, Purch_ID) values('89dvjhoo9', 4);
+
+1 row created.
+
+SQL> 
+SQL> 
+SQL> REM ***QUERIES
+SQL> column c1 heading "Account Number"
+SQL> select Customer_ID_Key c1, Last_Name, First_Name, Street_Address, Zip from Customers order by Customer_ID_Key;
+
+Account Number LAST_NAME            FIRST_NAME           STREET_ADDRESS                           ZIP                                                                                                                                                                                                                                                                                                                                                                                                               
+-------------- -------------------- -------------------- ---------------------------------------- ----------                                                                                                                                                                                                                                                                                                                                                                                                        
+             1 Wilson               George               115 Seabridge St                         34780                                                                                                                                                                                                                                                                                                                                                                                                             
+             2 Perez                Sebastian            101 Feldspar Ln                          42598                                                                                                                                                                                                                                                                                                                                                                                                             
+             3 Apple                Candy                14 Peppermint Way                        54321                                                                                                                                                                                                                                                                                                                                                                                                             
+             4 Sauvignon            Chloe                73 Kittycat Ct                           13942                                                                                                                                                                                                                                                                                                                                                                                                             
+             5 Sherman              Pee                  42 Wallaby Way                           94857                                                                                                                                                                                                                                                                                                                                                                                                             
+
+SQL> 
+SQL> select * from Rentals where Rental_Date >= sysdate-30 order by Rental_Date;
+
+RENTAL_ID_KEY    CUST_ID COPY_ID    RENTAL_DA DUE_DATE  DATE_RETU O RENTAL_FEE   LATE_FEE DAMAGE_FEE FAIL_TO_RWD_FEE OTHER_FEES      TAXES DISC_APPLIED TOTAL_COST   AMT_PAID    AMT_DUE                                                                                                                                                                                                                                                                                                                            
+------------- ---------- ---------- --------- --------- --------- - ---------- ---------- ---------- --------------- ---------- ---------- ------------ ---------- ---------- ----------                                                                                                                                                                                                                                                                                                                            
+            5          4 23857      03-APR-18 06-APR-18 04-APR-18 F       2.25          0          5               0          0        .18            0       5.18        .18          5                                                                                                                                                                                                                                                                                                                            
+            3          3 09137      18-APR-18 22-APR-18 27-APR-18 T       6.99        7.5          0               0          0        .56            0      15.05       7.55        7.5                                                                                                                                                                                                                                                                                                                            
+
+SQL> 
+SQL> select * from Distributors order by Dist_Name_Key;
+
+DIST_NAME_KEY   PHONE_NUMBER    E_MAIL                                   QUANT_DISCOUNT_OFFER REPEAT_DISCOUNT_OFFER                                                                                                                                                                                                                                                                                                                                                                                                 
+--------------- --------------- ---------------------------------------- -------------------- ---------------------                                                                                                                                                                                                                                                                                                                                                                                                 
+Antidot Films   349-583-9375    antidot_admin@antidot.com                                   0                   .42                                                                                                                                                                                                                                                                                                                                                                                                 
+Blockbuster     543-345-8693    movies@blockbuster.com                                      0                     0                                                                                                                                                                                                                                                                                                                                                                                                 
+Buena Vista     345-324-6542    sales@buenavista.com                                      .25                   .04                                                                                                                                                                                                                                                                                                                                                                                                 
+Lionsgate       800-927-5839    distribution@lionsgate.com                                .32                     0                                                                                                                                                                                                                                                                                                                                                                                                 
+Luxe            888-274-7193    sales@luxe.com                                             .3                   .16                                                                                                                                                                                                                                                                                                                                                                                                 
+Paramount       800-453-6839    director@paramount.com                                    .12                   .03                                                                                                                                                                                                                                                                                                                                                                                                 
+
+6 rows selected.
+
+SQL> 
+SQL> commit;
+
+Commit complete.
+
+SQL> update Customers set Last_Name = 'Cane' where Customer_ID_Key = 2;
+
+1 row updated.
+
+SQL> 
+SQL> select * from Customers;
+
+CUSTOMER_ID_KEY FIRST_NAME           LAST_NAME            STREET_ADDRESS                           CITY                 ST ZIP        PHONE_NUMBER    E_MAIL                                                                                                                                                                                                                                                                                                                                                        
+--------------- -------------------- -------------------- ---------------------------------------- -------------------- -- ---------- --------------- ----------------------------------------                                                                                                                                                                                                                                                                                                                      
+              1 George               Wilson               115 Seabridge St                         Knoxville            TN 34780      865-482-9541    mrwilson@gmail.com                                                                                                                                                                                                                                                                                                                                            
+              2 Sebastian            Cane                 101 Feldspar Ln                          Atlanta              GA 42598      970-421-0884    sebbyboy@yahoo.com                                                                                                                                                                                                                                                                                                                                            
+              3 Candy                Apple                14 Peppermint Way                        Candyland            CA 54321      654-395-4827    sweetaspie4298@candy.com                                                                                                                                                                                                                                                                                                                                      
+              4 Chloe                Sauvignon            73 Kittycat Ct                           Cat City             NY 13942      345-425-3425    chloethecat@chloecat.com                                                                                                                                                                                                                                                                                                                                      
+              5 Pee                  Sherman              42 Wallaby Way                           Sydney               AU 94857      859-385-9375    findingnemo@disney.com                                                                                                                                                                                                                                                                                                                                        
+
+SQL> 
+SQL> delete Customers where Customer_ID_Key = 5;
+
+1 row deleted.
+
+SQL> 
+SQL> select * from Customers;
+
+CUSTOMER_ID_KEY FIRST_NAME           LAST_NAME            STREET_ADDRESS                           CITY                 ST ZIP        PHONE_NUMBER    E_MAIL                                                                                                                                                                                                                                                                                                                                                        
+--------------- -------------------- -------------------- ---------------------------------------- -------------------- -- ---------- --------------- ----------------------------------------                                                                                                                                                                                                                                                                                                                      
+              1 George               Wilson               115 Seabridge St                         Knoxville            TN 34780      865-482-9541    mrwilson@gmail.com                                                                                                                                                                                                                                                                                                                                            
+              2 Sebastian            Cane                 101 Feldspar Ln                          Atlanta              GA 42598      970-421-0884    sebbyboy@yahoo.com                                                                                                                                                                                                                                                                                                                                            
+              3 Candy                Apple                14 Peppermint Way                        Candyland            CA 54321      654-395-4827    sweetaspie4298@candy.com                                                                                                                                                                                                                                                                                                                                      
+              4 Chloe                Sauvignon            73 Kittycat Ct                           Cat City             NY 13942      345-425-3425    chloethecat@chloecat.com                                                                                                                                                                                                                                                                                                                                      
+
+SQL> 
+SQL> rollback;
+
+Rollback complete.
+
+SQL> 
+SQL> select * from Customers;
+
+CUSTOMER_ID_KEY FIRST_NAME           LAST_NAME            STREET_ADDRESS                           CITY                 ST ZIP        PHONE_NUMBER    E_MAIL                                                                                                                                                                                                                                                                                                                                                        
+--------------- -------------------- -------------------- ---------------------------------------- -------------------- -- ---------- --------------- ----------------------------------------                                                                                                                                                                                                                                                                                                                      
+              1 George               Wilson               115 Seabridge St                         Knoxville            TN 34780      865-482-9541    mrwilson@gmail.com                                                                                                                                                                                                                                                                                                                                            
+              2 Sebastian            Perez                101 Feldspar Ln                          Atlanta              GA 42598      970-421-0884    sebbyboy@yahoo.com                                                                                                                                                                                                                                                                                                                                            
+              3 Candy                Apple                14 Peppermint Way                        Candyland            CA 54321      654-395-4827    sweetaspie4298@candy.com                                                                                                                                                                                                                                                                                                                                      
+              4 Chloe                Sauvignon            73 Kittycat Ct                           Cat City             NY 13942      345-425-3425    chloethecat@chloecat.com                                                                                                                                                                                                                                                                                                                                      
+              5 Pee                  Sherman              42 Wallaby Way                           Sydney               AU 94857      859-385-9375    findingnemo@disney.com                                                                                                                                                                                                                                                                                                                                        
+
+SQL> REM ***DROP TRIGGERS
+SQL> drop trigger customer_id_increase;
+
+Trigger dropped.
+
+SQL> drop trigger purchase_id_increase;
+
+Trigger dropped.
+
+SQL> drop trigger rental_id_increase;
+
+Trigger dropped.
+
+SQL> drop trigger academy_awards_id_increase;
+
+Trigger dropped.
+
+SQL> drop trigger acting_roles_id_increase;
+
+Trigger dropped.
+
+SQL> drop trigger directing_roles_id_increase;
+
+Trigger dropped.
+
+SQL> drop trigger catalog_id_increase;
+
+Trigger dropped.
+
+SQL> drop trigger items_purchased_id_increase;
+
+Trigger dropped.
+
+SQL> 
+SQL> REM ***DROP SEQUENCES
+SQL> drop sequence Customers_PK;
+
+Sequence dropped.
+
+SQL> drop sequence Purchases_PK;
+
+Sequence dropped.
+
+SQL> drop sequence Rentals_PK;
+
+Sequence dropped.
+
+SQL> drop sequence Academy_Awards_PK;
+
+Sequence dropped.
+
+SQL> drop sequence Acting_Roles_PK;
+
+Sequence dropped.
+
+SQL> drop sequence Directing_Roles_PK;
+
+Sequence dropped.
+
+SQL> drop sequence Catalogs_PK;
+
+Sequence dropped.
+
+SQL> drop sequence Items_Purchased_PK;
+
+Sequence dropped.
+
+SQL> 
+SQL> REM ***DROP TABLES
+SQL> drop table Items_Purchased;
+
+Table dropped.
+
+SQL> drop table Catalog_Items;
+
+Table dropped.
+
+SQL> drop table Catalogs;
+
+Table dropped.
+
+SQL> drop table Directing_Roles;
+
+Table dropped.
+
+SQL> drop table Acting_Roles;
+
+Table dropped.
+
+SQL> drop table Academy_Awards;
+
+Table dropped.
+
+SQL> drop table Rentals;
+
+Table dropped.
+
+SQL> drop table Movie_Copies;
+
+Table dropped.
+
+SQL> drop table Purchases;
+
+Table dropped.
+
+SQL> drop table Movies;
+
+Table dropped.
+
+SQL> drop table Distributors;
+
+Table dropped.
+
+SQL> drop table Customers;
+
+Table dropped.
+
+SQL> 
+SQL> spool off
